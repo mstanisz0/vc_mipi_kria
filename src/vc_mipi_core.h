@@ -161,6 +161,7 @@ struct vc_ctrl {
         struct vc_control exposure;
         struct vc_control gain;
         struct vc_control framerate;
+	struct vc_control blacklevel;
         // Modes & Frame Formats
         struct vc_frame frame;          // Pixel
         // Control and status registers
@@ -241,8 +242,8 @@ int vc_sen_set_roi(struct vc_cam *cam);
 int vc_sen_set_exposure(struct vc_cam *cam, int exposure);
 int vc_sen_set_gain(struct vc_cam *cam, int gain);
 
-//int vc_sen_set_blacklevel(struct vc_cam *cam, int blacklevel);
-int vc_sen_set_blacklevel(struct vc_cam *cam, __u32 blacklevel);
+int vc_sen_set_blacklevel(struct vc_cam *cam, int blacklevel);
+//int vc_sen_set_blacklevel(struct vc_cam *cam, __u32 blacklevel);
 int vc_sen_start_stream(struct vc_cam *cam);
 int vc_sen_stop_stream(struct vc_cam *cam);
 

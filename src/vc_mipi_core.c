@@ -877,7 +877,7 @@ static void vc_core_state_init(struct vc_cam *cam)
         state->mode = 0xff;
         state->exposure = ctrl->exposure.def;
         state->gain = ctrl->gain.def;
-//        state->blacklevel = ctrl->blacklevel.def;
+	state->blacklevel = ctrl->blacklevel.def;
         state->shs = 0;
         state->vmax = 0;
         state->exposure_cnt = 0;
@@ -886,9 +886,9 @@ static void vc_core_state_init(struct vc_cam *cam)
         state->num_lanes = desc->modes[0].num_lanes;
         state->format_code = vc_core_get_default_format(cam);
         format = vc_core_v4l2_code_to_format(state->format_code);
-        blacklevel_def = vc_core_get_blacklevel(cam, state->num_lanes, format).def;
-        blacklevel_max = vc_core_get_blacklevel(cam, state->num_lanes, format).max + 1;
-        state->blacklevel = (__u32)DIV_ROUND_CLOSEST(blacklevel_def * 100000, blacklevel_max);
+        //blacklevel_def = vc_core_get_blacklevel(cam, state->num_lanes, format).def;
+        //blacklevel_max = vc_core_get_blacklevel(cam, state->num_lanes, format).max + 1;
+        //state->blacklevel = (__u32)DIV_ROUND_CLOSEST(blacklevel_def * 100000, blacklevel_max);
 
         state->frame.left = 0;
         state->frame.top = 0;
@@ -1412,8 +1412,31 @@ int vc_sen_set_gain(struct vc_cam *cam, int gain)
         return 0;
 }
 
-//int vc_sen_set_blacklevel(struct vc_cam *cam, int blacklevel)
-int vc_sen_set_blacklevel(struct vc_cam *cam, __u32 blacklevel_rel)
+int vc_sen_set_blacklevel(struct vc_cam *cam, int blacklevel)
+{
+	struct vc_ctrl *ctrl = &cam->ctrl;
+	struct i2c_client *client = ctrl->client_sen;
+	struct device *dev = &client->dev;
+	int ret = 0;
+
+	if (blacklevel < ctrl->blacklevel.min) 
+		blacklevel = ctrl->blacklevel.min;
+	if (blacklevel > ctrl->blacklevel.max)
+		blacklevel = ctrl->blacklevel.max;
+
+	vc_notice(dev, "%s(): Set sensor black level: %u\n", __FUNCTION__, blacklevel);
+
+	ret |= i2c_write_reg2(dev, client, &ctrl->csr.sen.blacklevel, blacklevel, __FUNCTION__);
+	if (ret) {
+		vc_err(dev, "%s(): Couldn't set black level (error: %d)\n", __FUNCTION__, ret);
+		return ret;
+	}
+
+	cam->state.blacklevel = blacklevel;
+	return 0;
+}
+
+/*int vc_sen_set_blacklevel(struct vc_cam *cam, __u32 blacklevel_rel)
 {
         struct vc_ctrl *ctrl = &cam->ctrl;
         struct vc_state *state = &cam->state;
@@ -1437,7 +1460,7 @@ int vc_sen_set_blacklevel(struct vc_cam *cam, __u32 blacklevel_rel)
 
         cam->state.blacklevel = blacklevel_rel;
         return 0;
-}
+}*/
 
 int vc_sen_start_stream(struct vc_cam *cam)
 {
